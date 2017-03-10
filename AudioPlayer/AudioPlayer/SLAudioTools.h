@@ -16,4 +16,7 @@
 //判读指定路径是否存在
 +(BOOL)isFileExistAtPath:(NSString*)fileFullPath;
 
+//移除文件
++(void)deleteAudioAtAudioPath:(NSString *)pathStr;
+
 @end

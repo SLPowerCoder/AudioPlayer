@@ -114,28 +114,30 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
 -(void)saveAudioBtn:(UIButton *)button{
     //暂停录音
     [self.audioRecorder pauseRecord];
-    //自己定义一个UITextField添加上去，后来发现ios5自带了此功能
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"类别修改" message:@"" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"保存",nil];
-    [alert setAlertViewStyle:UIAlertViewStylePlainTextInput];
-    UITextField *txtName = [alert textFieldAtIndex:0];
-    txtName.placeholder = @"请输入名称";
-    [alert show];
-
-    self.timeProgressLbl.text = @"00:00";
-}
-
-
--(void)alertView:(UIAlertView*)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
-{
-    if (buttonIndex == 1) {
-        //得到输入框
-        UITextField *tf=[alertView textFieldAtIndex:0];
-        [self.audioRecorder saveAudioFileNamed:tf.text];
-
-    }else{
+    
+    UIAlertController *alertVC = [UIAlertController alertControllerWithTitle:@"新建文件名称" message:nil preferredStyle:UIAlertControllerStyleAlert];
+    [alertVC addTextFieldWithConfigurationHandler:^(UITextField * _Nonnull textField) {
+        textField.placeholder = @"请输入名称";
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
         
-    }
+    }];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        
+        //得到输入框
+        UITextField *tf=[[alertVC textFields] objectAtIndex:0];
+        [self.audioRecorder saveAudioFileNamed:tf.text];
+        
+        self.timeProgressLbl.text = @"00:00";
+    }];
+    
+    [alertVC addAction:cancel];
+    [alertVC addAction:ok];
+    
+    [self presentViewController:alertVC animated:YES completion:nil];
 }
+
 
 #pragma mark - tableView的代理方法
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -145,7 +147,6 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
 
 
 -(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
-   
     return 50;
 }
 
@@ -164,8 +165,8 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
     NSString *audioPath = [kAudioSavedPath stringByAppendingPathComponent:fileName];
     
     if ([SLAudioTools isFileExistAtPath:audioPath]) {
-        
-        SLAudioPlayer *audioPlayer = [[SLAudioPlayer alloc]initWithUrl:audioPath atTime:0];
+        SLAudioPlayer *audioPlayer = [SLAudioPlayer shareAudioInstance];
+        [audioPlayer setAudioPath:audioPath];
         [audioPlayer playAudio];
         
     }else{
@@ -186,12 +187,34 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
 }
 
 
+#pragma mark - Edit tableCell
+- (void)tableView:(UITableView*)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    //需要在此处判断该音频文件是否正在被使用
+    
+    if (editingStyle ==UITableViewCellEditingStyleDelete){
+        
+        NSLog(@"%ld",(long)indexPath.row);
+        //删除对应的音频文件
+        NSString *fileName = self.dataArray[indexPath.row];
+        NSString *audioPath = [kAudioSavedPath stringByAppendingPathComponent:fileName];
+        
+        [SLAudioTools deleteAudioAtAudioPath:audioPath];
+        
+        if (self.dataArray[indexPath.row]) {
+            [self.dataArray removeObjectAtIndex:indexPath.row];
+            [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObjects:indexPath, nil] withRowAnimation:UITableViewRowAnimationTop];
+        }
+    }
+}
+
+
 #pragma mark -- SLAudioRecorder的代理方法
 
 //录音时间
 -(void)audioRecorderedProgress:(NSTimeInterval)progress{
 
-    self.timeProgressLbl.text = [NSString stringWithFormat:@"%02d:%02d:%02d",((int)progress/60)%60,(int)progress%60, ((int)progress%60)%1000];
+    self.timeProgressLbl.text = [NSString stringWithFormat:@"%02d:%02d",((int)progress/60)%60,(int)progress%60];
 }
 
 //录音声波状态设置
@@ -214,7 +237,6 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
         _tableView.delegate = self;
         _tableView.dataSource = self;
     }
-    
     return _tableView;
 }
 
@@ -235,12 +257,6 @@ static NSString *const kRecorderedTableViewCell = @"RecorderedTableViewCell";
         _audioRecorder.delegate = self;
     }
     return _audioRecorder;
-}
-
-
-
--(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    
 }
 
 

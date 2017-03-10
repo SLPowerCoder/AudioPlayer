@@ -20,7 +20,6 @@
 		716C8F071E6FE470004CF0D1 /* RecorderedTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 716C8F061E6FE470004CF0D1 /* RecorderedTableViewCell.m */; };
 		716C8F0A1E7040AD004CF0D1 /* SLAudioPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 716C8F091E7040AD004CF0D1 /* SLAudioPlayer.m */; };
 		716C8F0D1E7047FB004CF0D1 /* SLAudioTools.m in Sources */ = {isa = PBXBuildFile; fileRef = 716C8F0C1E7047FB004CF0D1 /* SLAudioTools.m */; };
-		716C8F101E704A3C004CF0D1 /* SLAudioModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 716C8F0F1E704A3C004CF0D1 /* SLAudioModel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,8 +66,7 @@
 		716C8F091E7040AD004CF0D1 /* SLAudioPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SLAudioPlayer.m; sourceTree = "<group>"; };
 		716C8F0B1E7047FB004CF0D1 /* SLAudioTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SLAudioTools.h; sourceTree = "<group>"; };
 		716C8F0C1E7047FB004CF0D1 /* SLAudioTools.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SLAudioTools.m; sourceTree = "<group>"; };
-		716C8F0E1E704A3C004CF0D1 /* SLAudioModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SLAudioModel.h; sourceTree = "<group>"; };
-		716C8F0F1E704A3C004CF0D1 /* SLAudioModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SLAudioModel.m; sourceTree = "<group>"; };
+		716C8F111E72A22B004CF0D1 /* videoRing.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = videoRing.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +117,7 @@
 		716C8EAE1E6FC562004CF0D1 /* AudioPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				716C8F111E72A22B004CF0D1 /* videoRing.caf */,
 				716C8EE91E6FDEBA004CF0D1 /* AudioUI */,
 				716C8EE21E6FC5A3004CF0D1 /* AudioPlayer */,
 				716C8EB21E6FC562004CF0D1 /* AppDelegate.h */,
@@ -169,8 +168,6 @@
 				716C8F091E7040AD004CF0D1 /* SLAudioPlayer.m */,
 				716C8F0B1E7047FB004CF0D1 /* SLAudioTools.h */,
 				716C8F0C1E7047FB004CF0D1 /* SLAudioTools.m */,
-				716C8F0E1E704A3C004CF0D1 /* SLAudioModel.h */,
-				716C8F0F1E704A3C004CF0D1 /* SLAudioModel.m */,
 			);
 			path = AudioPlayer;
 			sourceTree = "<group>";
@@ -320,7 +317,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				716C8F101E704A3C004CF0D1 /* SLAudioModel.m in Sources */,
 				716C8F0A1E7040AD004CF0D1 /* SLAudioPlayer.m in Sources */,
 				716C8F071E6FE470004CF0D1 /* RecorderedTableViewCell.m in Sources */,
 				716C8F0D1E7047FB004CF0D1 /* SLAudioTools.m in Sources */,

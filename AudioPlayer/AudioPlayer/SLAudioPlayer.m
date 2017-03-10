@@ -9,25 +9,22 @@
 #import "SLAudioPlayer.h"
 
 @interface SLAudioPlayer ()
-@property (nonatomic, copy) NSString *currentAudioPath;   // 音频路径
-@property (nonatomic, assign) NSTimeInterval time;        // 音频播放指定时间
+
+@property (nonatomic, strong) AVAudioPlayer *audioPlayer;
+@property (nonatomic, copy)   NSString *currentAudioPath;
+
 @end
 
 @implementation SLAudioPlayer
 
-//指定音频路径和播放时间
-- (instancetype)initWithUrl:(NSString *)urlStr atTime:(NSTimeInterval)time
-{
-    self = [super init];
-    if (self) {
-        
-        self.currentAudioPath = urlStr;
-        self.time = time;
-    }
-    return self;
+static SLAudioPlayer *kInstance = nil;
++(SLAudioPlayer *)shareAudioInstance{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        kInstance = [[SLAudioPlayer alloc]init];
+    });
+    return kInstance;
 }
-
-/************************************播放音乐********************************/
 
 #pragma mark - 创建AVAudioPlayer对象
 //播放器对象，每一个音频路径对应一个AVAudioPlayer，所以不要用懒加载为好
@@ -49,41 +46,70 @@
     //只播放一次
     audioPlayer.numberOfLoops = 0;
     audioPlayer.enableRate = YES;
-    [audioPlayer prepareToPlay];
     audioPlayer.delegate = self;
     
     if (error) {
         NSLog(@"创建播放器过程中发生错误，请检查音频文件的路径对否，错误信息：%@",error.localizedDescription);
         return nil;
     }
-    
     return audioPlayer;
 }
 
 
+
 /**
- 创建并从指定的时间播放音频
+ 注意：只有在设置音频路径的时候才会创建音频对象并释放以前的对象
+ 所以每次播放新的视频的时候一定要设置
+ @param currentAudioPath 音频路径
+ */
+-(void)setAudioPath:(NSString *)currentAudioPath{
+    
+    if (currentAudioPath && ![currentAudioPath isEqualToString:@""]) {
+        //把上一次的音频对象和路径置为空
+        if (self.currentAudioPath && ![self.currentAudioPath isEqualToString:currentAudioPath]) {
+            _audioPlayer = nil;
+            self.currentAudioPath = nil;
+        }
+        //重新设置本次的
+        self.currentAudioPath = currentAudioPath;
+        if (self.currentAudioPath) {
+            self.audioPlayer = [self createAudioPlayerWithAudioUrl:currentAudioPath];
+        }
+    }else{
+        NSLog(@"设置的音频路径无效");
+    }
+}
+
+/**
+ 播放或暂停音频
  */
 -(void)playAudio{
     //每次一次播放都要创建一个新的对象
     if (!_audioPlayer) {
-        _audioPlayer = [self createAudioPlayerWithAudioUrl:self.currentAudioPath];
+        NSLog(@"音频对象为空，您还没有设置音频的路径!!!");
+        return;
     }
-    
-    if (self.time) {
-        if (![_audioPlayer isPlaying]) {
-            [_audioPlayer playAtTime:self.time];
-        }else{
-            [self pauseAudio];
-        }
-        
+    if (![_audioPlayer isPlaying]) {
+        [_audioPlayer play];
     }else{
-        if (![_audioPlayer isPlaying]) {
-            [_audioPlayer play];
-        }else{
-            [self pauseAudio];
-        }
-        
+        [self pausePlayAudio];
+    }
+}
+
+/**
+ 从指定的时间播放音频
+ @param time 指定的时间
+ */
+-(void)playAudioAtTime:(NSTimeInterval)time{
+    //每次一次播放都要创建一个新的对象
+    if (!_audioPlayer) {
+        NSLog(@"音频对象为空，您还没有设置音频的路径!!!");
+        return;
+    }
+    if (![_audioPlayer isPlaying]) {
+        [_audioPlayer playAtTime:time];
+    }else{
+        [self pausePlayAudio];
     }
 }
 
@@ -112,7 +138,7 @@
 /* audioPlayerDidFinishPlaying:successfully: is called when a sound has finished playing. This method is NOT called if the player is stopped due to an interruption. */
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag{
     NSLog(@"播放完成。。");
-    
+    [self stopPlayAudio];
     //后台音乐继续播放
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive:NO withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation error:nil];
@@ -120,16 +146,52 @@
 
 /* if an error occurs while decoding it will be reported to the delegate. */
 - (void)audioPlayerDecodeErrorDidOccur:(AVAudioPlayer *)player error:(NSError * __nullable)error{
-
+    _currentAudioPath = nil;
     NSLog(@"解码失败--%@",error.localizedDescription);
 }
 
-/*******************************************播放特效（简短的声音）*************************************/
-/*音频播放时间不能超过30s
- 数据必须是PCM或者IMA4格式
- 音频文件必须打包成.caf、.aif、.wav中的一种（注意这是官方文档的说法，实际测试发现一些.mp3也可以播放）
+
+@end
+
+
+@implementation SLPlaySoundEffect
+
+/**
+ 播放音效文件
+ 
+ @param audioPathStr 音频文件路径
  */
++(void)playSoundEffect:(NSString *)audioPathStr{
+    
+    NSURL *fileUrl;
+    if (audioPathStr && ([audioPathStr hasPrefix:@"https://"] || [audioPathStr hasPrefix:@"http://"])) {
+        fileUrl = [NSURL URLWithString:audioPathStr];
+    }else{
+        fileUrl = [NSURL fileURLWithPath:audioPathStr];
+    }
+    
+    //1.获得系统声音ID
+    SystemSoundID soundID=0;
+    /**
+     * inFileUrl:音频文件url
+     * outSystemSoundID:声音id（此函数会将音效文件加入到系统音频服务中并返回一个长整形ID）
+     */
+    AudioServicesCreateSystemSoundID((__bridge CFURLRef)(fileUrl), &soundID);
+    //如果需要在播放完之后执行某些操作，可以调用如下方法注册一个播放完成回调函数
+    AudioServicesAddSystemSoundCompletion(soundID, NULL, NULL, soundCompleteCallback, NULL);
+    //2.播放音频
+    AudioServicesPlaySystemSound(soundID);//播放音效
+    //    AudioServicesPlayAlertSound(soundID);//播放音效并震动
+}
 
-
+/**
+ 播放完成回调函数，C函数
+ 
+ @param soundID 系统声音ID
+ @param clientData 回调时传递的数据
+ */
+void soundCompleteCallback(SystemSoundID soundID,void * clientData){
+    NSLog(@"播放完成...");
+}
 
 @end

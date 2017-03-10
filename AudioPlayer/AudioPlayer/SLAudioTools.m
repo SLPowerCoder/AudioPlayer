@@ -37,4 +37,17 @@
     return isExist;
 }
 
+
++(void)deleteAudioAtAudioPath:(NSString *)pathStr{
+
+    NSFileManager *fileMr = [NSFileManager defaultManager];
+    if ([self isFileExistAtPath:pathStr]) {
+        NSError *err = nil;
+        [fileMr removeItemAtPath:pathStr error:&err];
+        if (err) {
+            NSLog(@"移除文件 %@ 错误%@",pathStr,err.localizedDescription);
+        }
+    }
+}
+
 @end

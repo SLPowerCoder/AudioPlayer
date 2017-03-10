@@ -43,7 +43,6 @@ typedef void (^recorderedBlock)();
         {
             NSLog(@"error doing outputaudioportoverride - %@", [audioError localizedDescription]);
         }
-        
         //初始化当前录音文件的位置
         self.currentAudioFilePath = nil;
     }
@@ -78,7 +77,6 @@ typedef void (^recorderedBlock)();
     
     return recordSetting;
 }
-
 
 //录音声波监控定制器
 -(NSTimer *)timer{
@@ -156,7 +154,6 @@ typedef void (^recorderedBlock)();
 
 //保存录音
 -(void)saveAudioFileNamed:(NSString *)nameStr{
-    
     if (self.currentAudioFilePath == nil) {
         NSLog(@"您还没录音呢，，，，，保存不了。。");
         return;
@@ -187,7 +184,6 @@ typedef void (^recorderedBlock)();
     //停止录音
     [self stopRecord];
 }
-
 
 //播放或暂停播放录音
 -(void)playAudio{
